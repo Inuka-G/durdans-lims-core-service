@@ -1,4 +1,3 @@
 rootProject.name = 'lims-core-service'
 include 'lims-core-service-api'
 include 'lims-core-service-app'
-

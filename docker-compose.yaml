@@ -1,0 +1,77 @@
+services:
+
+  # ==========================================
+  # KEYCLOAK & ITS DATABASE
+  # ==========================================
+  lims-keycloak-db:
+    image: postgres:15
+    container_name: lims-keycloak-db2
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - keycloak_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432" # Keycloak DB accessible on Mac via port 5433
+    restart: always
+
+  lims-keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: lims-keycloak2
+    command: start-dev --spi-theme-static-max-age=-1 --spi-theme-cache-themes=false
+      --spi-theme-cache-templates=false --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://lims-keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8081:8080" # Keycloak accessible on Mac via localhost:8081
+    depends_on:
+      - lims-keycloak-db
+    volumes:
+      - ./keycloak-themes:/opt/keycloak/themes
+      - ./keycloak-imports:/opt/keycloak/data/import
+    restart: always
+
+  # ==========================================
+  # LIMS APPLICATION & ITS DATABASE
+  # ==========================================
+  lims-postgres:
+    image: postgres:15
+    container_name: lims-postgres
+    environment:
+      POSTGRES_DB: lims_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - lims_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432" # CHANGED to 5434 so it doesn't conflict with Keycloak DB!
+    restart: always
+
+  lims-app:
+    build: .
+    container_name: lims-core-service
+    ports:
+      - "11000:11000"
+    depends_on:
+      - lims-postgres
+      - lims-keycloak
+    environment:
+      # 1. Force the app to use the LIMS Postgres container on port 5432
+      # (This overrides the 5435 port in your application.yml)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://lims-postgres:5432/lims_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+
+      # 2. Force the app to talk to Keycloak using the Docker container name
+      # (No more host.docker.internal needed!)
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://lims-keycloak:8080/realms/lims-realm
+
+volumes:
+  keycloak_postgres_data:
+  lims_postgres_data:

@@ -9,6 +9,7 @@ springBoot {
 dependencies {
     // 1. Reference the API module
     implementation project(':lims-core-service-api')
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'
 
     // 2. Web & Security
     implementation 'org.springframework.boot:spring-boot-starter-web'
