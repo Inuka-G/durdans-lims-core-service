@@ -2,6 +2,8 @@ package com.uom.lims.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,4 +23,18 @@ public class BranchEntity extends BaseEntity {
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "location")
+    private String location;
+
+    @Column(name = "contact_email")
+    private String contactEmail;
+
+    @Column(name = "contact_phone")
+    private String contactPhone;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private com.uom.lims.api.supermanagement.dto.enums.BranchOperationalStatus status =
+            com.uom.lims.api.supermanagement.dto.enums.BranchOperationalStatus.OPERATIONAL;
 }
